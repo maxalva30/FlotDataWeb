@@ -1,0 +1,580 @@
+/* ====================== */
+/* CONFIGURACIÓN GENERAL */
+/* ====================== */
+
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ====================== */
+/* ENCABEZADO */
+/* ====================== */
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 40px;
+    background-color: #fff;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    border-bottom: 2px solid #ccc;
+}
+
+.logo-container {
+    flex: 0 0 auto;
+}
+
+.logo {
+    height: 60px;
+    width: auto;
+}
+
+.titulo-container {
+    flex: 1;
+    text-align: center;
+}
+
+.titulo-principal {
+    font-size: 2.5em;
+    color: #333;
+    margin: 0;
+}
+
+/* ====================== */
+/* PIE DE PÁGINA */
+/* ====================== */
+
+.footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #f1f1f1;
+    font-size: 0.9em;
+    color: #555;
+    width: 100%;
+    box-shadow: 0px -4px 6px rgba(0, 0, 0, 0.1);
+    border-top: 2px solid #ccc;
+    margin-top: auto;
+}
+
+/* ====================== */
+/* CONTENIDO PRINCIPAL */
+/* ====================== */
+
+.content-container {
+    display: flex;
+    flex: 1;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Columna izquierda (A) */
+.left-column {
+    flex: 0 0 40%;
+    background-color: #ffffff;
+    border: 1px dashed #ccc;
+    padding: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flotation-img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+/* Columna derecha (B y C) */
+.right-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Área superior derecha (B) */
+.top-right {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px dashed #ccc;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Área inferior derecha (C) */
+.bottom-right {
+    flex: 1;
+    background-color: #ffffff;
+    border: 1px dashed #ccc;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* ====================== */
+/* TÍTULOS Y TEXTO */
+/* ====================== */
+
+.section-title {
+    font-size: 1.4em;
+    color: #0056b3;
+    margin-bottom: 10px;
+}
+
+.box-placeholder {
+    font-size: 0.95em;
+    color: #666;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* ====================== */
+/* DROPDOWNS (Área B) */
+/* ====================== */
+
+.dropdown-label {
+    font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    display: block;
+    color: #333;
+}
+
+.custom-dropdown {
+    margin-bottom: 15px;
+}
+
+/* ====================== */
+/* SUBIDA DE ARCHIVOS + BOTÓN (Área C) */
+/* ====================== */
+
+.upload-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+/* Ícono de Excel */
+.excel-icon {
+    width: 55px;
+    height: auto;
+}
+
+/* Cuadro de carga */
+#upload-data {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+/* Texto dentro del upload */
+#upload-data > div {
+    font-size: 0.95em;
+    color: #333;
+}
+
+/* Botón verde de navegación */
+.go-button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    white-space: nowrap;
+}
+
+.go-button:hover {
+    background-color: #1e7e34;
+}
+
+/* ====================== */
+/* RESPONSIVE DESIGN */
+/* ====================== */
+
+@media (max-width: 1000px) {
+    .content-container {
+        flex-direction: column;
+    }
+
+    .left-column {
+        flex: 1 0 auto;
+        max-height: 300px;
+    }
+
+    .right-column {
+        flex: 1 0 auto;
+    }
+
+    .titulo-principal {
+        font-size: 2em;
+    }
+}
+/* ====================== */
+/* LAYOUT PARA plots.py */
+/* ====================== */
+
+ =============================
+   SECCIÓN 3: PLOTS - LAYOUT BASE
+   ============================= */
+/* --- Layout general para plots.py --- */
+#plot-layout {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 100px); /* deja espacio para header (80px) + footer (20px) */
+    padding-top: 80px;  /* espacio para que no tape el header */
+    padding-bottom: 20px; /* espacio visual antes del footer */
+}
+
+/* --- Bloque 1: Izquierda (botones de entrada) --- */
+.plot-layout-left {
+    position: absolute;
+    top: 10%;
+    left: 3%;
+    width: 20%;
+}
+
+/* --- Bloque 2: Centro (imagen + botones de salida) --- */
+.plot-layout-center {
+    position: absolute;
+    top: 10%;
+    left: 30%;
+    width: 40%;
+    text-align: center;
+}
+
+/* --- Bloque 3: Derecha (parámetros y correlaciones) --- */
+.plot-layout-right {
+    position: absolute;
+    top: 10%;
+    right: 3%;
+    width: 25%;
+}
+
+/* Imagen centrada en su contenedor */
+.plot-bank-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* --- Estilos para botones generales --- */
+.custom-button {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    background-color: #d3d3d3;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+}
+
+/* Botones rojos para parámetros */
+.parameter-button {
+    margin: 4px;
+    padding: 6px 10px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* Botones azules para gráficos */
+.graph-button {
+    margin: 4px;
+    padding: 8px 12px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+}
+/* NUEVO: Layout de columnas horizontales */
+.layout-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 30px;
+    gap: 20px;
+}
+
+/* Cada layout ocupa 25% del ancho */
+.layout-a,
+.layout-b,
+.layout-c,
+.layout-d {
+    width: 25%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Imagen centrada */
+.flotation-image {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+/* Botones grises uniformes */
+.gray-button {
+    background-color: #d3d3d3;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    margin: 10px 0;
+    width: 75%;
+    text-align: center;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Botones rojos */
+.red-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin: 5px 0;
+    width: 90%;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Botones azules */
+.blue-button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin: 5px 0;
+    width: 90%;
+    font-weight: bold;
+    cursor: pointer;
+}
+/* === General Layout === */
+body {
+  margin: 0;
+  font-family: "Arial", sans-serif;
+  background-color: #f5f5f5;
+}
+
+.main-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+/* === Layout Sections === */
+.section-a,
+.section-b,
+.section-c,
+.section-d {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Ajuste específico para que la imagen quede centrada */
+.section-b {
+  justify-content: center;
+  flex: 1;
+}
+
+.section-a,
+.section-d {
+  flex: 0.5;
+}
+
+.section-c {
+  flex: 1;
+  align-items: flex-start;
+}
+
+/* === Buttons === */
+.gray-button {
+  background-color: #d3d3d3;
+  border: none;
+  padding: 10px 20px;
+  margin: 10px;
+  font-weight: bold;
+  width: 75%;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.red-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.blue-button {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-weight: bold;
+  border-radius: 5px;
+  margin-top: 10px;
+  cursor: pointer;
+  width: 200px;
+}
+
+/* === Image === */
+.flotation-image {
+  max-width: 400px;
+  height: auto;
+  margin: 20px auto;
+}
+
+/* === Text / Labels === */
+.kpi-label {
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+/* === Horizontal Button Pairing === */
+.param-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.section-a {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    position: relative;
+    padding-top: 10%; /* Espacio desde arriba */
+}
+
+.feed-btn {
+    margin-top: 15%;
+    align-self: flex-start;
+}
+
+.reagents-btn {
+    margin-top: 15%;
+    align-self: flex-start;
+}
+
+.mineral-btn {
+    margin-top: 30%;
+    align-self: flex-start;
+}
+/* Layout D: Botones grises en el lado derecho */
+.section-d {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    padding: 10% 0;
+}
+
+.section-d .gray-button {
+    width: 75%;
+    height: 60px;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.section-d {
+    position: relative;
+}
+
+.section-d .btn-concentrate {
+    position: absolute;
+    top: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75%;
+}
+
+.section-d .btn-tails {
+    position: absolute;
+    top: 140%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 75%;
+}
+
+.param-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.arrow-icon {
+    height: 24px;
+    width: auto;
+}
+.blue-buttons-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+.image-button {
+    width: 100px;
+    height: 100px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 4px;
+    background-color: white;
+}
+
+.image-button:hover {
+    transform: scale(1.05);
+}
+/* -------------------- Footer -------------------- */
+.footer {
+    text-align: center;
+    padding: 10px;
+    background-color: #f1f1f1;
+    font-size: 0.9em;
+    color: #555;
+    width: 100%;
+    box-shadow: 0px -4px 4px rgba(0, 0, 0, 0.1);
+    border-top: 2px solid #ccc;
+    position: fixed;
+    bottom: 0;
+}
