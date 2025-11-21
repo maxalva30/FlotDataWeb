@@ -4,5 +4,7 @@ plotly
 pandas==1.3.2
 openpyxl
 gunicorn
+sweetviz==2.1.4
 setuptools
 wheel
+
