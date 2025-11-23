@@ -1,13 +1,14 @@
 dash==2.17.1
 dash-bootstrap-components==1.6.0
 plotly>=5.18,<7
-pandas==1.5.3
-
+pandas==2.2.2
+numpy==1.26.4
 openpyxl
 gunicorn
 sweetviz==2.1.4
 
 setuptools
 wheel
+
 
 
