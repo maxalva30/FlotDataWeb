@@ -5,6 +5,10 @@ from dash import html, dcc, callback, Input, Output, State, ctx, no_update
 from dash.dcc import Download, send_file
 from dash.exceptions import PreventUpdate
 import pandas as pd
+# 🔧 Parche de compatibilidad para Sweetviz + pandas >= 2
+if not hasattr(pd.DataFrame, "iteritems"):
+    pd.DataFrame.iteritems = pd.DataFrame.items
+
 import sweetviz as sv
 import re
 import plotly.express as px
