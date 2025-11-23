@@ -2,56 +2,49 @@ import dash
 from dash import Dash, dcc, html
 import dash_bootstrap_components as dbc
 
-# Initialize Dash app with multipage support enabled
 app = Dash(
     __name__,
     use_pages=True,
     suppress_callback_exceptions=True,
-    external_stylesheets=[dbc.themes.BOOTSTRAP]
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
 )
 server = app.server
 
-# Main layout with header, global stores, page container and footer
 app.layout = html.Div([
+    # >>> STORES GLOBALES <<<
+    dcc.Store(id="stored-data", storage_type="session"),
+    dcc.Store(id="group-map-store", storage_type="session"),
+    dcc.Store(id="flotation-config", storage_type="session"),  # 👈 NUEVO
 
-    # ---------- Header ----------
+    # Header
     html.Div(
         className="header-container",
         children=[
             html.Div(
+                html.Img(src="/assets/MetsoLogo.png", className="logo"),
                 className="logo-container",
-                children=html.Img(
-                    src="/assets/MetsoLogo.png",
-                    className="logo"
-                )
             ),
             html.Div(
-                className="titulo-container",
-                children=html.H1(
+                html.H1(
                     "Flotation Data Analysis Assistant",
-                    className="titulo-principal"
-                )
+                    className="titulo-principal",
+                ),
+                className="titulo-container",
+            ),
+            html.Div(
+                id="report-message",
+                className="report-message-header",
             ),
         ],
     ),
 
-    # ---------- Global Stores (available for all pages) ----------
-    # These stores will hold the uploaded flotation data and
-    # the mapping: group name (Feed, Reagents, etc.) -> list of variables
-    dcc.Store(id="stored-data", storage_type="session"),
-    dcc.Store(id="group-map-store", storage_type="session"),
+    # Contenido multipage
+    dcc.Loading(dash.page_container, type="circle"),
 
-    # ---------- Page content (Dash Pages) ----------
-    dcc.Loading(
-        id="page-loading",
-        type="circle",
-        children=dash.page_container
-    ),
-
-    # ---------- Footer ----------
+    # Footer
     html.Div(
         className="footer",
-        children=html.P("Copyright © 2025 Metso")
+        children=html.P("Copyright © 2025 Metso"),
     ),
 ])
 
