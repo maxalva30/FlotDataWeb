@@ -119,7 +119,7 @@ layout = html.Div(
                     className="section-b",
                     children=[
                         html.Img(
-                            src="/assets/Flotationbank.png",
+                            src="/assets/flotationbank.png",
                             className="flotation-bank-image",
                         )
                     ],
