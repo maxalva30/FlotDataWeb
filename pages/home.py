@@ -19,7 +19,7 @@ layout = html.Div(
                     className="left-column",
                     children=[
                         html.Img(
-                            src="/assets/Flotationbank.png",
+                            src="/assets/flotationbank.png",
                             className="flotation-img",
                         )
                     ],
