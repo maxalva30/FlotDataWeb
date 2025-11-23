@@ -5,10 +5,12 @@ pandas==1.5.3
 numpy==1.26.4
 openpyxl
 gunicorn
-sweetviz==2.1.4
+
+sweetviz==2.3.1        # <--- CAMBIAR aquí (antes tenías 2.1.4)
 
 setuptools
 wheel
+
 
 
 
