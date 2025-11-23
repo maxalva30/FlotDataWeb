@@ -19,7 +19,7 @@ layout = html.Div(
                     className="left-column",
                     children=[
                         html.Img(
-                            src="/assets/flotationbank.png",
+                            src="/assets/Flotationbank.png",
                             className="flotation-img",
                         )
                     ],
@@ -122,13 +122,6 @@ layout = html.Div(
     prevent_initial_call=True,
 )
 def handle_upload(contents, filename):
-    """
-    Handle Excel upload:
-    - Read the 'Data' sheet using row 5 (groups) and row 6 (variable names) as a MultiIndex header.
-    - Build a mapping: group -> list of variable names.
-    - Store the dataframe as JSON in 'stored-data' and the mapping in 'group-map-store'.
-    - Update the upload box content to show Excel icon + filename (inside the dashed box).
-    """
     if contents is None:
         raise PreventUpdate
 
@@ -139,42 +132,42 @@ def handle_upload(contents, filename):
         # Open Excel file
         xls = pd.ExcelFile(io.BytesIO(decoded))
 
-        # We expect a sheet called "Data" (flotation template)
+        # Expect a sheet called 'Data'
         if "Data" not in xls.sheet_names:
-            raise ValueError(
-                "Template mismatch: sheet 'Data' was not found in this file."
-            )
+            raise ValueError("Template mismatch: sheet 'Data' was not found in this file.")
 
         # Read Excel with two header rows:
-        # row 5 (index 4) -> group name: Feed, Reagents, Mineral type, etc.
-        # row 6 (index 5) -> variable name inside each group.
-        df = pd.read_excel(
+        #   row 6 (index 5) -> group name: Feed, Reagents, Mineral type, etc.
+        #   row 7 (index 6) -> variable name inside each group.
+        df_multi = pd.read_excel(
             xls,
             sheet_name="Data",
-            header=[4, 5],
+            header=[5, 6],
         )
 
-        # Name the MultiIndex levels for clarity
-        df.columns = df.columns.set_names(["group", "variable"])
+        df_multi.columns = df_multi.columns.set_names(["group", "variable"])
 
-        # Try to convert the first column to datetime (usually the time column)
-        if len(df.columns) > 0:
-            first_col = df.columns[0]
-            df[first_col] = pd.to_datetime(df[first_col], errors="coerce")
-
-        # Build mapping: group name -> list of variable names
+        # Build mapping: group -> list of variables
         group_to_columns = {}
-        for grp, var in df.columns:
+        for grp, var in df_multi.columns:
             if pd.isna(grp) or pd.isna(var):
                 continue
             g = str(grp).strip()
             v = str(var).strip()
             group_to_columns.setdefault(g, []).append(v)
 
-        # Serialize dataframe to JSON for storage
-        df_json = df.to_json(date_format="iso", orient="split")
+        # Flatten columns for JSON storage: "Group__Variable"
+        df_flat = df_multi.copy()
+        flat_columns = [f"{g}__{v}" for g, v in df_flat.columns]
+        df_flat.columns = flat_columns
 
-        # Upload box content: Excel icon + filename INSIDE the dashed box
+        # Convert first column (time) to datetime if possible
+        if len(df_flat.columns) > 0:
+            first_col = df_flat.columns[0]
+            df_flat[first_col] = pd.to_datetime(df_flat[first_col], errors="coerce")
+
+        df_json = df_flat.to_json(date_format="iso", orient="split")
+
         label = filename if filename else "Excel file loaded"
         upload_children = html.Div(
             className="upload-inner",
@@ -183,29 +176,43 @@ def handle_upload(contents, filename):
                     src="/assets/excel-icon.png",
                     className="excel-icon",
                 ),
-                html.Span(
-                    label,
-                    className="file-name",
-                ),
+                html.Span(label, className="file-name"),
             ],
         )
 
         return df_json, group_to_columns, upload_children
 
     except Exception as e:
-        # More informative error: the user probably loaded a file
-        # that does not follow the flotation template.
         print("Error reading Excel file:", e)
 
         error_children = html.Div(
             className="upload-error",
             children=[
                 html.Span(
-                    "Invalid file. Use the Flotation Template: sheet 'Data' with "
-                    "row 5 as groups and row 6 as variable names.",
+                    "Invalid file. Use the Flotation Template: sheet 'Data' "
+                    "with row 6 as groups and row 7 as variable names."
                 )
             ],
         )
 
-        # Do not overwrite previous valid data if there was any
         return dash.no_update, dash.no_update, error_children
+
+    # 🔻 EXACTAMENTE AQUÍ, DEBAJO DE handle_upload 🔻
+
+@dash.callback(
+    Output("flotation-config", "data"),
+    Input("dropdown-flotation-rows", "value"),
+    Input("dropdown-cells-per-row", "value"),
+)
+def store_flotation_config(n_rows, cells_per_row):
+    """
+    Save flotation configuration (rows and cells per row)
+    so it can be used later in the plots page.
+    """
+    if n_rows is None or cells_per_row is None:
+        raise PreventUpdate
+
+    return {
+        "rows": int(n_rows),
+        "cells_per_row": int(cells_per_row),
+    }
