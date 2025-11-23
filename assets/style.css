@@ -48,7 +48,13 @@ body {
     color: #333;
     margin: 0;
 }
-
+.report-message-header {
+    flex: 0 0 260px;      /* ancho fijo a la derecha del header */
+    font-size: 0.8em;
+    color: #555;
+    text-align: right;
+    padding-left: 20px;
+}
 /* ====================== */
 /* PIE DE PÁGINA */
 /* ====================== */
@@ -564,6 +570,49 @@ body {
 
 .image-button:hover {
     transform: scale(1.05);
+}
+/* ===== Layout main for plots page (4 columns A–B–D–C) ===== */
+.plots-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr 1.2fr;  /* A, B, D, C */
+    column-gap: 40px;
+    align-items: stretch;
+    padding: 40px 40px 80px 40px;  /* deja espacio para header y footer */
+    box-sizing: border-box;
+    min-height: calc(100vh - 120px);  /* altura visible sin pisar el footer */
+}
+/* Parámetros columna C */
+.param-block {
+    margin-bottom: 18px;
+}
+
+.param-name {
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.param-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.red-button.small-red {
+    padding: 6px 14px;
+    font-size: 12px;
+}
+
+.arrow-icon {
+    font-size: 16px;
+    margin: 0 4px;
+}
+/* Mensaje de generación de reporte en la página de plots */
+.report-message {
+    text-align: right;
+    font-size: 12px;
+    color: #555;
+    padding: 6px 40px 0 0;  /* margen derecho similar al resto de la página */
+    min-height: 16px;       /* para que no salte el layout cuando aparezca */
 }
 /* -------------------- Footer -------------------- */
 .footer {
