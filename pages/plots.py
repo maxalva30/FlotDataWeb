@@ -527,6 +527,41 @@ def build_3d_corr_modal():
         ],
     )
 
+def build_timeseries_modal():
+    return dbc.Modal(
+        id="timeseries-modal",
+        is_open=False,
+        size="lg",
+        children=[
+            dbc.ModalHeader(
+                dbc.ModalTitle("TIME SERIES ANALYSIS")
+            ),
+            dbc.ModalBody(
+                [
+                    html.H6("Parameter", className="mb-3"),
+                    dbc.Row(
+                        [
+                            dbc.Col(
+                                dcc.Dropdown(
+                                    id="timeseries-param",
+                                    placeholder="Select parameter",
+                                    className="w-100",
+                                ),
+                                width=6,
+                            ),
+                        ],
+                        className="mb-4",
+                    ),
+                    dbc.Button(
+                        "Generate Plot",
+                        id="timeseries-generate",
+                        color="primary",
+                    ),
+                    dcc.Download(id="download-timeseries"),
+                ]
+            ),
+        ],
+    )
 
 # =======================
 # Layout principal
@@ -720,6 +755,7 @@ layout = html.Div(
                         build_recovery_stats_modal(),
                         build_2d_corr_modal(),
                         build_3d_corr_modal(),   # <-- añade esta línea
+                        build_timeseries_modal(),   # ⬅️ agrega esta línea
                     ],
                 ),
             ],
@@ -1365,6 +1401,17 @@ def toggle_corr3d_modal(n_clicks, is_open):
         raise PreventUpdate
     return not is_open
 
+@dash.callback(
+    Output("timeseries-modal", "is_open"),
+    Input("btn-time", "n_clicks"),
+    State("timeseries-modal", "is_open"),
+    prevent_initial_call=True,
+)
+def toggle_timeseries_modal(n_clicks, is_open):
+    if not n_clicks:
+        raise PreventUpdate
+    return not is_open
+
 # ---------- Fechas min/max para los 3 modals ----------
 
 @dash.callback(
@@ -1622,6 +1669,37 @@ def fill_corr3d_modal(is_open, stored_json):
 )
 def toggle_corr3d_color_disabled(enabled):
     return not bool(enabled)
+
+@dash.callback(
+    Output("timeseries-param", "options"),
+    Input("timeseries-modal", "is_open"),
+    State("stored-data", "data"),
+    prevent_initial_call=True,
+)
+def fill_timeseries_modal(is_open, stored_json):
+    if not is_open or stored_json is None:
+        raise PreventUpdate
+
+    df_flat = pd.read_json(stored_json, orient="split")
+
+    var_options = []
+    for col in df_flat.columns:
+        # saltamos las columnas de tiempo
+        if col.startswith("Time__"):
+            continue
+
+        series = df_flat[col]
+        if not pd.api.types.is_numeric_dtype(series):
+            continue
+
+        # label sin el prefijo de grupo
+        label = col.split("__", 1)[1] if "__" in col else col
+        var_options.append({"label": label, "value": col})
+
+    if not var_options:
+        raise PreventUpdate
+
+    return var_options
 
 # ---------- Download Airflow stats (tu función actual, intacta) ----------
 
@@ -2349,6 +2427,63 @@ def generate_3d_corr_report(
 
     tmp_dir = tempfile.gettempdir()
     filename = "Correlation_3D_Scatter.html"
+    path = os.path.join(tmp_dir, filename)
+    fig.write_html(path, include_plotlyjs="cdn")
+
+    return send_file(path)
+
+@dash.callback(
+    Output("download-timeseries", "data"),
+    Input("timeseries-generate", "n_clicks"),
+    State("timeseries-param", "value"),
+    State("stored-data", "data"),
+    prevent_initial_call=True,
+)
+def generate_timeseries_report(
+    n_clicks,
+    param_col,
+    stored_json,
+):
+    if not n_clicks:
+        raise PreventUpdate
+    if stored_json is None or param_col is None:
+        raise PreventUpdate
+
+    df_flat = pd.read_json(stored_json, orient="split")
+
+    time_col = "Time__DateTime_Measured"
+    if time_col not in df_flat.columns:
+        raise PreventUpdate
+
+    # limpiamos y ordenamos por tiempo
+    df_flat[time_col] = pd.to_datetime(df_flat[time_col])
+    df_sel = df_flat[[time_col, param_col]].dropna()
+    df_sel = df_sel.sort_values(time_col)
+
+    if df_sel.empty:
+        raise PreventUpdate
+
+    def _nice_label(col):
+        return col.split("__", 1)[1] if "__" in col else col
+
+    y_label = _nice_label(param_col)
+
+    fig = px.line(
+        df_sel,
+        x=time_col,
+        y=param_col,
+    )
+    fig.update_layout(
+        title=f"Time Series – {y_label}",
+        xaxis_title="Date / Time",
+        yaxis_title=y_label,
+        template="simple_white",
+        height=600,
+        margin=dict(l=60, r=40, t=60, b=60),
+    )
+
+    tmp_dir = tempfile.gettempdir()
+    filename = "TimeSeries_Analysis.html"
     path = os.path.join(tmp_dir, filename)
     fig.write_html(path, include_plotlyjs="cdn")
 
