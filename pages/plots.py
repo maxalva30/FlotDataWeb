@@ -19,7 +19,6 @@ dash.register_page(__name__, path="/plots")
 # =======================
 # Layout – Modals helpers
 # =======================
-
 def build_airflow_stats_modal():
     return dbc.Modal(
         id="airflow-stats-modal",
