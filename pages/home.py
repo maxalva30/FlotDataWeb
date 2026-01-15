@@ -1,7 +1,3 @@
-"""
-Metso Flotation Data Analysis Assistant - Home Page
-Redesigned with modern UI/UX principles
-"""
 
 import dash
 from dash import html, dcc, Input, Output, State, callback
@@ -201,7 +197,7 @@ def create_hero_carousel():
         children=[
             dcc.Interval(
                 id='carousel-interval',
-                interval=4000,  # 5 seconds
+                interval=4000,
                 n_intervals=0
             ),
             html.Div(
@@ -540,7 +536,6 @@ def handle_upload(contents, filename):
     """Handle Excel file upload with validation and preview"""
     if contents is None:
         raise PreventUpdate
-    
     content_type, content_string = contents.split(",")
     decoded = base64.b64decode(content_string)
     
