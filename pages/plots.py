@@ -1,6 +1,7 @@
 import os
 import math
 import tempfile
+import json
 import dash
 from dash import html, dcc, callback, Input, Output, State, ctx, no_update, ALL
 from dash.dcc import Download, send_file
@@ -329,6 +330,277 @@ def _generate_param_raw_report(n_clicks, stored_data, group_map, flot_config,
     fig.write_html(path, include_plotlyjs="cdn")
     
     return path
+
+
+def generate_recovery_stats_report(n_clicks, selected_date,
+                                   stored_data, group_map, flot_config):
+    """
+    Genera histogramas Before/After + tabla de stats por cada columna
+    de recuperación (%Rec ...) del grupo 'Process Calculated'.
+    
+    This is the ORIGINAL function from plots_antiguo.py that works correctly.
+    Returns the path to the generated HTML file.
+    """
+    if not n_clicks:
+        raise PreventUpdate
+    if stored_data is None or group_map is None or flot_config is None:
+        raise PreventUpdate
+    if selected_date is None:
+        raise PreventUpdate
+
+    # --- imports extra (solo SciPy puede no estar) ---
+    try:
+        from scipy import stats as scipy_stats
+    except ImportError:
+        scipy_stats = None
+
+    # --- reconstruir DF plano y columna de tiempo ---
+    df_flat = pd.read_json(stored_data, orient="split")
+
+    # Find time column
+    time_col = None
+    for col in df_flat.columns:
+        if "DateTime" in col or "Time" in col:
+            time_col = col
+            break
+    
+    if time_col is None:
+        raise ValueError("Time column not found in data.")
+    time_series = pd.to_datetime(df_flat[time_col])
+
+    # --- obtener grupo Process Calculated ---
+    df_proc = _get_group_df(stored_data, group_map, "Process Calculated")
+
+    # columnas de recuperación (flexible: cualquier cosa que contenga 'Rec')
+    rec_cols = [
+        c for c in df_proc.columns
+        if "rec" in c.lower()
+    ]
+    if not rec_cols:
+        raise ValueError(
+            "No recovery columns found in 'Process Calculated' (looking for 'Rec')."
+        )
+    n_metrics = len(rec_cols)   # número de gráficos
+    nbins = 40                  # o el número de bins que quieras usar
+    
+    # --- helper: densidad simple a partir del histograma ---
+    def _density_curve(values, bins=40):
+        values = np.asarray(values, dtype=float)
+        if values.size < 2:
+            return values, np.zeros_like(values)
+        counts, edges = np.histogram(values, bins=bins, density=True)
+        centers = 0.5 * (edges[1:] + edges[:-1])
+        return centers, counts
+
+    # --- figura con subplots: 1 fila por %Rec, 2 columnas (hist + tabla) ---
+    fig = make_subplots(
+        rows=len(rec_cols),
+        cols=2,
+        specs=[[{"type": "xy"}, {"type": "table"}] for _ in rec_cols],
+        column_widths=[0.65, 0.35],
+        vertical_spacing=0.12,
+        horizontal_spacing=0.08,
+    )
+
+    event_date = pd.to_datetime(selected_date).date()
+
+    for row_idx, col_name in enumerate(rec_cols, start=1):
+        series = df_proc[col_name]
+
+        # máscaras before / after
+        valid = series.notna() & time_series.notna()
+        before_mask = valid & (time_series.dt.date < event_date)
+        after_mask = valid & (time_series.dt.date >= event_date)
+
+        before_vals = series[before_mask].astype(float).values
+        after_vals = series[after_mask].astype(float).values
+
+        if before_vals.size == 0 or after_vals.size == 0:
+            # si falta info para esa línea, saltamos
+            continue
+
+        # --- histograma + curva de densidad (Before / After) ---
+        # Colores fijos para todos los plots
+        color_before = "#1f77b4"  # azul
+        color_after = "#ff7f0e"   # naranja
+
+        # barras
+        fig.add_trace(
+            go.Histogram(
+                x=before_vals,
+                name="Before",
+                marker_color=color_before,
+                opacity=0.5,
+                nbinsx=nbins,
+                offsetgroup="before",
+                histnorm="probability density",
+                legendgroup="period",
+                showlegend=(row_idx == 1),
+            ),
+            row=row_idx,
+            col=1,
+        )
+        fig.add_trace(
+            go.Histogram(
+                x=after_vals,
+                name="After",
+                marker_color=color_after,
+                opacity=0.5,
+                histnorm="probability density",
+                nbinsx=nbins,
+                offsetgroup="after",
+                legendgroup="period",
+                showlegend=(row_idx == 1),
+            ),
+            row=row_idx,
+            col=1,
+        )
+
+        # curvas de densidad (sin afectar leyenda)
+        x_b, y_b = _density_curve(before_vals)
+        x_a, y_a = _density_curve(after_vals)
+
+        fig.add_trace(
+            go.Scatter(
+                x=x_b,
+                y=y_b,
+                mode="lines",
+                line=dict(color=color_before),
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=row_idx,
+            col=1,
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=x_a,
+                y=y_a,
+                mode="lines",
+                line=dict(color=color_after),
+                hoverinfo="skip",
+                showlegend=False,
+            ),
+            row=row_idx,
+            col=1,
+        )
+
+        # ejes
+        fig.update_xaxes(title_text=col_name, row=row_idx, col=1)
+        fig.update_yaxes(
+            title_text="Density" if row_idx == 1 else "",
+            row=row_idx,
+            col=1,
+        )
+
+        # --- estadística básica ---
+        n_before = int(before_vals.size)
+        n_after = int(after_vals.size)
+
+        mean_before = float(np.mean(before_vals))
+        mean_after = float(np.mean(after_vals))
+
+        std_before = float(np.std(before_vals, ddof=1)) if n_before > 1 else float("nan")
+        std_after = float(np.std(after_vals, ddof=1)) if n_after > 1 else float("nan")
+
+        se_before = std_before / np.sqrt(n_before) if n_before > 0 else float("nan")
+        se_after = std_after / np.sqrt(n_after) if n_after > 0 else float("nan")
+
+        # --- estadísticos extra para el bloque de texto (t-test de Welch) ---
+        delta = mean_before - mean_after
+        ci_low = ci_high = t_stat = p_val = df = None
+
+        if scipy_stats is not None and n_before > 1 and n_after > 1:
+            var_before = std_before ** 2
+            var_after = std_after ** 2
+            se_diff = math.sqrt(var_before / n_before + var_after / n_after)
+
+            if se_diff > 0:
+                t_stat = delta / se_diff
+                # grados de libertad de Welch
+                num = (var_before / n_before + var_after / n_after) ** 2
+                den = (
+                    (var_before ** 2) / (n_before ** 2 * (n_before - 1))
+                    + (var_after ** 2) / (n_after ** 2 * (n_after - 1))
+                )
+                df = num / den if den != 0 else None
+
+                if df is not None and df > 0:
+                    p_val = 2 * scipy_stats.t.sf(abs(t_stat), df)
+                    alpha = 0.05
+                    t_crit = scipy_stats.t.ppf(1 - alpha / 2, df)
+                    ci_low = delta - t_crit * se_diff
+                    ci_high = delta + t_crit * se_diff
+
+        # --- tabla: mismo nombre de colores en TODOS los plots ---
+        header_values = ["Period", "N", "Mean", "StDev", "SE Mean"]
+
+        period_vals = ["A_before", "B_after"]
+        n_vals = [n_before, n_after]
+        mean_vals = [mean_before, mean_after]
+        stdev_vals = [std_before, std_after]
+        se_vals = [se_before, se_after]
+
+        # bloque de texto abajo de la tabla (si pudimos calcularlo)
+        if (
+            df is not None
+            and t_stat is not None
+            and p_val is not None
+            and ci_low is not None
+            and ci_high is not None
+        ):
+            lines = [
+                f"&Delta; = &mu;(A) - &mu;(B) = {delta:+.3f}",
+                f"95% CI: ({ci_low:.3f}; {ci_high:.3f})",
+                f"t = {t_stat:.2f} (df = {df:.0f})",
+                f"p = {p_val:.3f}",
+            ]
+            text_block = "<br>".join(lines)
+
+            period_vals.append(text_block)
+            n_vals.append("")
+            mean_vals.append("")
+            stdev_vals.append("")
+            se_vals.append("")
+
+        fig.add_trace(
+            go.Table(
+                header=dict(
+                    values=header_values,
+                    align="left",
+                    fill_color="rgb(230, 230, 230)",
+                    font=dict(size=12),
+                ),
+                cells=dict(
+                    values=[period_vals, n_vals, mean_vals, stdev_vals, se_vals],
+                    align="left",
+                    format=[None, "d", ".2f", ".2f", ".2f"],
+                ),
+                columnwidth=[90, 40, 60, 60, 70],
+            ),
+            row=row_idx,
+            col=2,
+        )
+
+    # layout general
+    fig.update_layout(
+        title_text="Recovery – Before vs After (per line)",
+        barmode="group",
+        bargap=0.05,
+        bargroupgap=0.02,
+        legend_title_text="Period",
+        height=280 * n_metrics,
+        template="simple_white",
+        margin=dict(l=60, r=40, t=80, b=60),
+    )
+
+    # guardar y devolver ruta (modificado para el código nuevo)
+    tmp_dir = tempfile.gettempdir()
+    filename = sanitize_filename("Recovery_Statistical_Analysis") + ".html"
+    path = os.path.join(tmp_dir, filename)
+    fig.write_html(path, include_plotlyjs="cdn")
+
+    return path  # Changed from send_file() to return path
 
 
 def _generate_param_BA_stats_report(
@@ -871,7 +1143,7 @@ layout = html.Div([
     ),
     
     # ============================================
-    # SECTION 1: REPORT GENERATION BUTTONS
+    # SECTION 1: REPORT GENERATION BUTTONS WITH FLOTATION CELL VISUAL
     # ============================================
     html.Div(
         className="section-card reports-section",
@@ -883,14 +1155,71 @@ layout = html.Div([
                     html.H2("Generate Reports", className="section-title")
                 ]
             ),
+            
+            # Flotation cell visualization with positioned buttons
             html.Div(
-                className="reports-buttons-grid",
+                className="flotation-cell-container",
                 children=[
-                    html.Button("Feed", id="btn-feed-report", className="report-button", n_clicks=0),
-                    html.Button("Reagents", id="btn-reagents-report", className="report-button", n_clicks=0),
-                    html.Button("Mineral Type", id="btn-mineral-report", className="report-button", n_clicks=0),
-                    html.Button("Concentrate", id="btn-concentrate-report", className="report-button", n_clicks=0),
-                    html.Button("Tails", id="btn-tails-report", className="report-button", n_clicks=0),
+                    # Central flotation cell image
+                    html.Div(
+                        className="flotation-cell-image",
+                        children=[
+                            html.Img(
+                                src="/assets/flotationcell.png",
+                                className="cell-img"
+                            )
+                        ]
+                    ),
+                    
+                    # Positioned buttons pointing to parts of the cell
+                    html.Div(
+                        className="flotation-buttons-overlay",
+                        children=[
+                            # Feed - Top Left with arrow
+                            html.Div(
+                                className="flotation-button-wrapper feed-position",
+                                children=[
+                                    html.Button("Feed", id="btn-feed-report", className="report-button-visual", n_clicks=0),
+                                    html.Div(className="arrow-line arrow-feed")
+                                ]
+                            ),
+                            
+                            # Reagents - Left with arrow
+                            html.Div(
+                                className="flotation-button-wrapper reagents-position",
+                                children=[
+                                    html.Button("Reagents", id="btn-reagents-report", className="report-button-visual", n_clicks=0),
+                                    html.Div(className="arrow-line arrow-reagents")
+                                ]
+                            ),
+                            
+                            # Concentrate - Right with arrow
+                            html.Div(
+                                className="flotation-button-wrapper concentrate-position",
+                                children=[
+                                    html.Button("Concentrate", id="btn-concentrate-report", className="report-button-visual", n_clicks=0),
+                                    html.Div(className="arrow-line arrow-concentrate")
+                                ]
+                            ),
+                            
+                            # Tails - Bottom Right with arrow
+                            html.Div(
+                                className="flotation-button-wrapper tails-position",
+                                children=[
+                                    html.Button("Tails", id="btn-tails-report", className="report-button-visual", n_clicks=0),
+                                    html.Div(className="arrow-line arrow-tails")
+                                ]
+                            ),
+                        ]
+                    ),
+                    
+                    # Mineral Type - Separate button below
+                    html.Div(
+                        className="mineral-type-section",
+                        children=[
+                            html.Button("Mineral Type", id="btn-mineral-report", className="report-button-mineral", n_clicks=0)
+                        ]
+                    )
                 ]
             )
         ]
@@ -1006,6 +1335,11 @@ layout = html.Div([
         ]
     ),
     
+    # Store for Recovery HTML path
+    dcc.Store(id="recovery-html-path-store", storage_type="memory"),
+    # Download component for Recovery
+    dcc.Download(id="download-recovery-file"),
+    
     # ============================================
     # SECTION 4: CORRELATION ANALYSIS CARDS
     # ============================================
@@ -1027,7 +1361,7 @@ layout = html.Div([
                         className="correlation-card",
                         n_clicks=0,
                         children=[
-                            html.Div("📊", className="correlation-card-icon"),
+                            html.Div(html.Img(src="/assets/2dscatter.png", style={"maxWidth": "150px"}), className="correlation-card-icon"),
                             html.H3("2D Correlation – Scatter plot", className="correlation-card-title")
                         ]
                     ),
@@ -1036,7 +1370,7 @@ layout = html.Div([
                         className="correlation-card",
                         n_clicks=0,
                         children=[
-                            html.Div("🎲", className="correlation-card-icon"),
+                            html.Div(html.Img(src="/assets/3dscatter.png", style={"maxWidth": "180px"}), className="correlation-card-icon"),
                             html.H3("3D Correlation – Scatter plot", className="correlation-card-title")
                         ]
                     ),
@@ -1045,7 +1379,7 @@ layout = html.Div([
                         className="correlation-card",
                         n_clicks=0,
                         children=[
-                            html.Div("📈", className="correlation-card-icon"),
+                            html.Div(html.Img(src="/assets/timeseries.png", style={"maxWidth": "150px"}), className="correlation-card-icon"),
                             html.H3("TIME SERIES ANALYSIS", className="correlation-card-title")
                         ]
                     ),
@@ -1089,6 +1423,11 @@ layout = html.Div([
     # ============================================
     html.Div(id="report-modal-container"),  # Container for report modals
     html.Div(id="graph-expand-modal-container"),  # Container for expanded graph modal
+    
+    # ✅ NEW: Stores for correlation file paths
+    dcc.Store(id="corr2d-path-store", data=None),
+    dcc.Store(id="corr3d-path-store", data=None),
+    dcc.Store(id="timeseries-path-store", data=None),
 ])
 
 
@@ -1888,6 +2227,7 @@ def download_expanded_graph(n_clicks, html_path):
 
 @callback(
     Output("graph-expand-modal-container", "children", allow_duplicate=True),
+    Output("corr2d-path-store", "data"),  # ✅ NEW: Store the file path
     Input("corr2d-generate", "n_clicks"),
     State("corr2d-range", "start_date"),
     State("corr2d-range", "end_date"),
@@ -1966,11 +2306,7 @@ def generate_2d_corr_graph(n_clicks, start_date, end_date, x_col, y_col, enable_
                             html.Div(
                                 className="large-modal-actions",
                                 children=[
-                                    html.A(
-                                        html.Button("Download", className="btn-download-modal"),
-                                        href=f"file://{path}",
-                                        download="2D_Correlation.html"
-                                    ),
+                                    html.Button("Download", id="btn-download-2d-corr", className="btn-download-modal", n_clicks=0),
                                     html.Button("✕", id="btn-close-corr-modal", className="btn-close-modal", n_clicks=0)
                                 ]
                             )
@@ -1986,15 +2322,17 @@ def generate_2d_corr_graph(n_clicks, start_date, end_date, x_col, y_col, enable_
                         ]
                     )
                 ]
-            )
+            ),
+            dcc.Download(id="download-2d-corr-file")  # ✅ Added Download component
         ]
     )
     
-    return modal
+    return modal, path  # ✅ Return path to store
 
 
 @callback(
     Output("graph-expand-modal-container", "children", allow_duplicate=True),
+    Output("corr3d-path-store", "data"),  # ✅ NEW: Store the file path
     Input("corr3d-generate", "n_clicks"),
     State("corr3d-range", "start_date"),
     State("corr3d-range", "end_date"),
@@ -2076,11 +2414,7 @@ def generate_3d_corr_graph(n_clicks, start_date, end_date, x_col, y_col, z_col, 
                             html.Div(
                                 className="large-modal-actions",
                                 children=[
-                                    html.A(
-                                        html.Button("Download", className="btn-download-modal"),
-                                        href=f"file://{path}",
-                                        download="3D_Correlation.html"
-                                    ),
+                                    html.Button("Download", id="btn-download-3d-corr", className="btn-download-modal", n_clicks=0),
                                     html.Button("✕", id="btn-close-corr-modal", className="btn-close-modal", n_clicks=0)
                                 ]
                             )
@@ -2096,15 +2430,17 @@ def generate_3d_corr_graph(n_clicks, start_date, end_date, x_col, y_col, z_col, 
                         ]
                     )
                 ]
-            )
+            ),
+            dcc.Download(id="download-3d-corr-file")  # ✅ Added Download component
         ]
     )
     
-    return modal
+    return modal, path  # ✅ Return path to store
 
 
 @callback(
     Output("graph-expand-modal-container", "children", allow_duplicate=True),
+    Output("timeseries-path-store", "data"),  # ✅ NEW: Store the file path
     Input("timeseries-generate", "n_clicks"),
     State("timeseries-param", "value"),
     State("stored-data", "data"),
@@ -2160,11 +2496,7 @@ def generate_timeseries_graph(n_clicks, param_col, stored_json):
                             html.Div(
                                 className="large-modal-actions",
                                 children=[
-                                    html.A(
-                                        html.Button("Download", className="btn-download-modal"),
-                                        href=f"file://{path}",
-                                        download="TimeSeries_Analysis.html"
-                                    ),
+                                    html.Button("Download", id="btn-download-timeseries", className="btn-download-modal", n_clicks=0),
                                     html.Button("✕", id="btn-close-corr-modal", className="btn-close-modal", n_clicks=0)
                                 ]
                             )
@@ -2180,11 +2512,12 @@ def generate_timeseries_graph(n_clicks, param_col, stored_json):
                         ]
                     )
                 ]
-            )
+            ),
+            dcc.Download(id="download-timeseries-file")  # ✅ Added Download component
         ]
     )
     
-    return modal
+    return modal, path  # ✅ Return path to store
 
 
 @callback(
@@ -2205,6 +2538,7 @@ def close_corr_modal(n_clicks):
 @callback(
     Output("graph-expand-modal-container", "children", allow_duplicate=True),
     Output("pdf-charts-list", "data", allow_duplicate=True),
+    Output("recovery-html-path-store", "data"),
     Input("btn-recovery-view", "n_clicks"),
     Input("btn-recovery-pdf", "n_clicks"),
     Input("recovery-stats-generate", "n_clicks"),
@@ -2225,10 +2559,10 @@ def handle_recovery_actions(view_clicks, pdf_clicks, generate_clicks, recovery_d
         if recovery_date is None:
             raise PreventUpdate
         
-        # Generate recovery stats graph
-        html_path = _generate_param_BA_stats_report(
-            1, recovery_date, stored_data, group_map, flot_config,
-            "%Recovery", "%", "Recovery"
+        # Generate recovery stats graph using the ORIGINAL function from plots_antiguo.py
+        # This function generates histograms + statistical tables (NOT boxplots)
+        html_path = generate_recovery_stats_report(
+            1, recovery_date, stored_data, group_map, flot_config
         )
         
         # Check if this was triggered by View or Add to PDF
@@ -2247,11 +2581,7 @@ def handle_recovery_actions(view_clicks, pdf_clicks, generate_clicks, recovery_d
                                 html.Div(
                                     className="large-modal-actions",
                                     children=[
-                                        html.A(
-                                            html.Button("Download", className="btn-download-modal"),
-                                            href=f"file://{html_path}",
-                                            download="Recovery_Statistical_Analysis.html"
-                                        ),
+                                        html.Button("Download", id="btn-download-recovery", className="btn-download-modal", n_clicks=0),
                                         html.Button("✕", id="btn-close-recovery-modal", className="btn-close-modal", n_clicks=0)
                                     ]
                                 )
@@ -2271,7 +2601,9 @@ def handle_recovery_actions(view_clicks, pdf_clicks, generate_clicks, recovery_d
             ]
         )
         
-        return modal, no_update
+        return modal, no_update, html_path
+    
+    return no_update, no_update, no_update
     
     return no_update, no_update
 
@@ -2287,6 +2619,134 @@ def close_recovery_modal(n_clicks):
     return None
 
 
+@callback(
+    Output("download-recovery-file", "data"),
+    Input("btn-download-recovery", "n_clicks"),
+    State("recovery-html-path-store", "data"),
+    prevent_initial_call=True
+)
+def download_recovery_file(n_clicks, file_path):
+    """Download Recovery Statistical Analysis HTML file"""
+    if not n_clicks or not file_path:
+        raise PreventUpdate
+    
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    else:
+        raise PreventUpdate
+
+
+# =======================
+# HELPER FUNCTIONS: EXTRACT JSON FROM HTML
+# =======================
+
+def extract_json_object(text, start_pos, open_char, close_char):
+    """
+    Extract a complete JSON object/array by counting opening/closing characters.
+    
+    Args:
+        text: The full text to search
+        start_pos: Starting position (should be at open_char)
+        open_char: Opening character ('[' or '{')
+        close_char: Closing character (']' or '}')
+    
+    Returns:
+        The complete JSON string including the opening and closing characters
+    """
+    if text[start_pos] != open_char:
+        raise ValueError(f"Expected '{open_char}' at position {start_pos}")
+    
+    depth = 0
+    in_string = False
+    escape_next = False
+    pos = start_pos
+    
+    while pos < len(text):
+        char = text[pos]
+        
+        if escape_next:
+            escape_next = False
+            pos += 1
+            continue
+        
+        if char == '\\':
+            escape_next = True
+            pos += 1
+            continue
+        
+        if char == '"':
+            in_string = not in_string
+            pos += 1
+            continue
+        
+        if not in_string:
+            if char == open_char:
+                depth += 1
+            elif char == close_char:
+                depth -= 1
+                if depth == 0:
+                    # Found the closing character
+                    return text[start_pos:pos+1]
+        
+        pos += 1
+    
+    raise ValueError(f"Could not find closing '{close_char}'")
+
+
+def extract_plotly_json_from_html(html_content):
+    """
+    Robustly extract Plotly data and layout JSON from HTML.
+    Handles nested JSON objects correctly by counting braces.
+    """
+    try:
+        # Look for Plotly.newPlot pattern
+        plotly_match = re.search(r'Plotly\.newPlot\([^,]+,\s*', html_content)
+        if not plotly_match:
+            raise ValueError("Could not find Plotly.newPlot in HTML")
+        
+        start_pos = plotly_match.end()
+        
+        # Extract data array (starts with [)
+        if html_content[start_pos] != '[':
+            raise ValueError("Expected '[' for data array")
+        
+        data_json = extract_json_object(html_content, start_pos, '[', ']')
+        
+        # Find next comma after data
+        comma_pos = start_pos + len(data_json)
+        while comma_pos < len(html_content) and html_content[comma_pos] in ' \n\t':
+            comma_pos += 1
+        if html_content[comma_pos] != ',':
+            raise ValueError("Expected ',' after data array")
+        comma_pos += 1
+        
+        # Skip whitespace
+        while comma_pos < len(html_content) and html_content[comma_pos] in ' \n\t':
+            comma_pos += 1
+        
+        # Extract layout object (starts with {)
+        if html_content[comma_pos] != '{':
+            raise ValueError("Expected '{' for layout object")
+        
+        layout_json = extract_json_object(html_content, comma_pos, '{', '}')
+        
+        # Parse JSON
+        data = json.loads(data_json)
+        layout = json.loads(layout_json)
+        
+        return data, layout
+        
+    except Exception as e:
+        # Fallback to alternative pattern
+        json_match = re.search(r'"data":\s*(\[.*?\]),\s*"layout":\s*(\{.*?\})', html_content, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group(1))
+            layout = json.loads(json_match.group(2))
+            return data, layout
+        else:
+            raise ValueError(f"Could not extract Plotly JSON: {e}")
+
+
 # =======================
 # CALLBACKS - PART 9: GENERATE PDF REPORT
 # =======================
@@ -2298,20 +2758,22 @@ def close_recovery_modal(n_clicks):
     prevent_initial_call=True
 )
 def generate_pdf_report(n_clicks, pdf_list):
+    """Generate PDF report with charts as images"""
     if not n_clicks or not pdf_list:
         raise PreventUpdate
     
     try:
-        
-        from reportlab.lib.pagesizes import letter, A4
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Image, PageBreak
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Image as RLImage
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import inch
         from reportlab.lib.enums import TA_CENTER
+        from reportlab.lib import colors
         from datetime import datetime
-        
-        # Temporary: Return message that PDF generation requires ReportLab
-        raise PreventUpdate  # Skip PDF generation for now
+        import plotly.io as pio
+        import plotly.graph_objects as go
+        import re
+        import json
         
         # Create PDF
         tmp_dir = tempfile.gettempdir()
@@ -2322,22 +2784,30 @@ def generate_pdf_report(n_clicks, pdf_list):
         story = []
         styles = getSampleStyleSheet()
         
-        # Add custom title style
+        # Add custom styles
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
             fontSize=24,
-            textColor='#1e3a8a',
-            spaceAfter=30,
+            textColor=colors.HexColor('#1e3a8a'),
+            spaceAfter=20,
             alignment=TA_CENTER
         )
         
-        # Add Metso logo
-        logo_path = "/mnt/user-data/uploads/MetsoLogo.png"
-        if os.path.exists(logo_path):
-            logo = Image(logo_path, width=2*inch, height=0.7*inch)
-            story.append(logo)
-            story.append(Spacer(1, 0.3*inch))
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.grey,
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        # # Add Metso logo
+        # logo_path = "/mnt/user-data/uploads/MetsoLogo.png"
+        # if os.path.exists(logo_path):
+        #     logo = Image(logo_path, width=2*inch, height=0.7*inch)
+        #     story.append(logo)
+        #     story.append(Spacer(1, 0.3*inch))
         
         # Add title
         title = Paragraph("Flotation Cell Analysis Report", title_style)
@@ -2345,27 +2815,71 @@ def generate_pdf_report(n_clicks, pdf_list):
         
         # Add date
         date_text = f"Generated on: {datetime.now().strftime('%B %d, %Y at %H:%M')}"
-        date_para = Paragraph(date_text, styles['Normal'])
+        date_para = Paragraph(date_text, subtitle_style)
         story.append(date_para)
-        story.append(Spacer(1, 0.5*inch))
         
-        # Add each chart
-        for chart in pdf_list:
-            # Add chart title
-            chart_title = Paragraph(f"<b>{chart['title']}</b>", styles['Heading2'])
-            story.append(chart_title)
-            story.append(Spacer(1, 0.2*inch))
-            
-            # Note: Converting HTML charts to PDF images is complex
-            # For now, we'll add a placeholder
-            note = Paragraph(
-                f"Chart: {chart['title']}<br/>Source: {chart['html_path']}<br/><br/>"
-                "Note: Interactive charts are best viewed in HTML format. "
-                "Download individual charts for full interactivity.",
-                styles['Normal']
-            )
-            story.append(note)
-            story.append(PageBreak())
+        # Convert each chart to image and add to PDF
+        for idx, chart in enumerate(pdf_list, 1):
+            try:
+                html_path = chart.get('html_path')
+                chart_title = chart.get('title', f'Chart {idx}')
+                
+                if not html_path or not os.path.exists(html_path):
+                    # If HTML doesn't exist, add a placeholder
+                    error_para = Paragraph(
+                        f"<b>{chart_title}</b><br/>Chart file not found.",
+                        styles['Normal']
+                    )
+                    story.append(error_para)
+                    story.append(Spacer(1, 0.3*inch))
+                    continue
+                
+                # Read HTML file and extract Plotly JSON
+                with open(html_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+                
+                # Extract Plotly JSON from HTML using robust parser
+                try:
+                    data, layout = extract_plotly_json_from_html(html_content)
+                    
+                    # Create figure
+                    fig = go.Figure(data=data, layout=layout)
+                    
+                except ValueError as ve:
+                    raise ValueError(f"Could not extract Plotly figure from HTML: {ve}")
+                
+                # Convert to image using kaleido
+                img_filename = f"chart_{idx}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                img_path = os.path.join(tmp_dir, img_filename)
+                
+                # Write image
+                fig.write_image(img_path, format='png', width=800, height=600, scale=2)
+                
+                # Add chart title to PDF
+                chart_title_para = Paragraph(f"<b>{chart_title}</b>", styles['Heading2'])
+                story.append(chart_title_para)
+                story.append(Spacer(1, 0.1*inch))
+                
+                # Add image to PDF
+                img = RLImage(img_path, width=6.5*inch, height=4.875*inch)
+                story.append(img)
+                story.append(Spacer(1, 0.3*inch))
+                
+                # Add page break after each chart (except last)
+                if idx < len(pdf_list):
+                    story.append(PageBreak())
+                
+            except Exception as e:
+                # If conversion fails, add error message
+                print(f"Error converting chart '{chart_title}' to image: {e}")
+                import traceback
+                traceback.print_exc()
+                error_para = Paragraph(
+                    f"<b>{chart_title}</b><br/>Error: Could not convert chart to image. {str(e)}",
+                    styles['Normal']
+                )
+                story.append(error_para)
+                story.append(Spacer(1, 0.3*inch))
         
         # Build PDF
         doc.build(story)
@@ -2374,5 +2888,61 @@ def generate_pdf_report(n_clicks, pdf_list):
         
     except Exception as e:
         print(f"Error generating PDF: {e}")
+        import traceback
+        traceback.print_exc()
         raise PreventUpdate
 
+
+# ============================================
+# CORRELATION DOWNLOAD CALLBACKS
+# ============================================
+
+@callback(
+    Output("download-2d-corr-file", "data"),
+    Input("btn-download-2d-corr", "n_clicks"),
+    State("corr2d-path-store", "data"),
+    prevent_initial_call=True
+)
+def download_2d_corr_file(n_clicks, file_path):
+    """Download 2D Correlation HTML file"""
+    if not n_clicks or not file_path:
+        raise PreventUpdate
+    
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    else:
+        raise PreventUpdate
+
+
+@callback(
+    Output("download-3d-corr-file", "data"),
+    Input("btn-download-3d-corr", "n_clicks"),
+    State("corr3d-path-store", "data"),
+    prevent_initial_call=True
+)
+def download_3d_corr_file(n_clicks, file_path):
+    """Download 3D Correlation HTML file"""
+    if not n_clicks or not file_path:
+        raise PreventUpdate
+    
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    else:
+        raise PreventUpdate
+
+
+@callback(
+    Output("download-timeseries-file", "data"),
+    Input("btn-download-timeseries", "n_clicks"),
+    State("timeseries-path-store", "data"),
+    prevent_initial_call=True
+)
+def download_timeseries_file(n_clicks, file_path):
+    """Download Time Series Analysis HTML file"""
+    if not n_clicks or not file_path:
+        raise PreventUpdate
+    
+    if os.path.exists(file_path):
+        return send_file(file_path)
+    else:
+        raise PreventUpdate

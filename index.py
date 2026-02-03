@@ -39,7 +39,7 @@ def create_navbar():
                             children=[
                                 dbc.NavItem(
                                     dbc.NavLink(
-                                        "Flotation Cells",
+                                        "Flotation Analysis Tool",
                                         href="/",
                                         className="nav-link-custom"
                                     )
