@@ -15,5 +15,7 @@ sweetviz>=2.3.1
 reportlab
 
 gunicorn
-setuptools
+# IMPORTANTE: setuptools con pkg_resources
+setuptools==69.5.1
 wheel
+
