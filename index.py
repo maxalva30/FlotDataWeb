@@ -81,7 +81,8 @@ app = Dash(
     suppress_callback_exceptions=True,
     title="Metso - Flotation Data Assistant"
 )
-
+# 👇 ESTA LÍNEA ES LA CLAVE PARA RENDER
+server = app.server
 # ============================================
 # APP LAYOUT
 # ============================================
