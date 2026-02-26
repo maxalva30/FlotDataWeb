@@ -1,0 +1,1264 @@
+/* ============================================
+   METSO FLOTATION DATA ASSISTANT - CUSTOM STYLES
+   ============================================ */
+
+:root {
+    /* Metso Color Palette */
+    --primary-blue: #1e3a8a;
+    --accent-yellow: #fbbf24;
+    --success-green: #10b981;
+    --neutral-gray: #f3f4f6;
+    --dark-text: #1f2937;
+    --light-text: #6b7280;
+    --border-color: #e5e7eb;
+    
+    /* Spacing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: var(--neutral-gray);
+    color: var(--dark-text);
+    margin: 0;
+    padding: 0;
+}
+
+/* ============================================
+   HERO CAROUSEL
+   ============================================ */
+
+.hero-carousel {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: var(--spacing-xl);
+}
+
+.hero-slide {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    animation: fadeIn 1.2s ease-in-out;
+}
+
+.hero-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;        /* ← Forzar mismo tamaño */
+    object-position: center;
+    display: block;
+    animation: kenBurns 15s ease-in-out infinite alternate;
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(55, 65, 81, 0.75) 0%, rgba(75, 85, 99, 0.55) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 2);
+}
+
+.hero-title {
+    color: white;
+    font-size: 3rem;
+    font-weight: 700;
+    margin: 0 0 var(--spacing-md) 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.25rem;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* ============================================
+   CARDS & SECTIONS
+   ============================================ */
+
+.section-card {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--neutral-gray);
+}
+
+.section-icon {
+    color: var(--primary-blue);
+    font-size: 1.5rem;
+}
+
+.section-title {
+    color: rgb(31, 41, 55);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ============================================
+   DATA UPLOAD AREA
+   ============================================ */
+
+.upload-container {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: var(--spacing-xl);
+    text-align: center;
+    background: var(--neutral-gray);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-container:hover {
+    border-color: var(--primary-blue);
+    background: rgba(30, 58, 138, 0.05);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--primary-blue);
+    margin-bottom: var(--spacing-md);
+}
+
+.upload-text {
+    color: var(--light-text);
+    font-size: 0.95rem;
+}
+
+.file-loaded {
+    border-color: var(--success-green);
+    background: rgba(16, 185, 129, 0.05);
+}
+
+/* ============================================
+   EXCEL PREVIEW
+   ============================================ */
+
+.excel-preview-container {
+    margin-top: var(--spacing-lg);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.stat-card {
+    background: var(--neutral-gray);
+    padding: var(--spacing-md);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin: 0;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: var(--light-text);
+    margin: 0.25rem 0 0 0;
+}
+
+/* ============================================
+   FLOTATION CONFIGURATION
+   ============================================ */
+
+.config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.config-item label {
+    display: block;
+    font-weight: 500;
+    color: var(--dark-text);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.95rem;
+}
+
+.total-cells-display {
+    display: flex;
+    justify-content: space-around;
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: var(--neutral-gray);
+    border-radius: 8px;
+}
+
+.cell-counter {
+    text-align: center;
+}
+
+.cell-counter-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: rgb(64, 69, 77);
+}
+
+.cell-counter-label {
+    font-size: 0.85rem;
+    color: var(--light-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ============================================
+   PREVIEW GRAPHICS
+   ============================================ */
+
+.preview-graphics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 2fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-xl);
+}
+
+.preview-chart-container {
+    background: white;
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+}
+
+.chart-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: var(--spacing-sm);
+    text-align: center;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn-primary {
+    background: var(--success-green);
+    color: white;
+    border: none;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+    background: var(--light-text);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ============================================
+   GUIDE SECTION
+   ============================================ */
+
+.guide-content {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-xl);
+    align-items: center;
+}
+
+.guide-text {
+    color: var(--light-text);
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.guide-illustration {
+    text-align: center;
+}
+
+.guide-illustration img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .config-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .guide-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .preview-graphics-grid {
+        grid-template-columns: 1fr;
+    }
+}
+/* ============================================
+   EXCEL PREVIEW SECTION 
+   ============================================ */
+
+#excel-preview-section {
+    min-width: 0;
+    overflow: hidden;
+}
+
+#excel-preview-container-left {
+    width: 100%;
+    overflow: hidden;
+}
+/* ============================================
+   DASH COMPONENT OVERRIDES
+   ============================================ */
+
+.Select-control {
+    border-radius: 6px !important;
+    border-color: var(--border-color) !important;
+}
+
+.Select-control:hover {
+    border-color: var(--primary-blue) !important;
+}
+
+.dash-table-container {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.dash-spreadsheet-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+/* ============================================
+   NAVBAR STYLES
+   ============================================ */
+
+.navbar-container {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-navbar {
+    background: white !important;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.navbar-brand-text {
+    font-size: 1.85rem;
+    font-weight: 720;
+    color: #1f2937;
+    padding: 0.5rem 1rem;
+    transition: color 0.3s ease;
+}
+
+.navbar-brand-text:hover {
+    color: #1e3a8a;
+}
+
+.navbar-nav-center {
+    position: absolute;
+    left: 20%;
+    transform: translateX(-50%);
+}
+
+.nav-link-custom {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #6b7280 !important;
+    padding: 0.5rem 1.5rem !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link-custom:hover {
+    color: #1e3a8a !important;
+    background: rgba(30, 58, 138, 0.05);
+    border-radius: 6px;
+}
+
+.navbar-menu-button {
+    margin-left: auto;
+}
+
+.menu-btn {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 1.5rem;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-btn:hover {
+    background: var(--neutral-gray);
+    border-color: var(--primary-blue);
+    color: var(--primary-blue);
+}
+
+/* Navbar Responsive */
+@media (max-width: 768px) {
+    .custom-navbar {
+        padding: 0.75rem 1rem;
+    }
+    
+    .navbar-brand-text {
+        font-size: 1.25rem;
+    }
+    
+    .navbar-nav-center {
+        position: static;
+        transform: none;
+        margin: 1 auto;
+    }
+    
+    .nav-link-custom {
+        font-size: 0.95rem;
+        padding: 0.5rem 1rem !important;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+@keyframes kenBurns {
+    0% {
+        transform: scale(1);
+    }
+    100% {
+        transform: scale(1.15);
+    }
+}
+
+/* ============================================
+   PLOTS PAGE - NEW DESIGN STYLES
+   ============================================ */
+
+/* Report Buttons Section */
+.reports-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.reports-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
+}
+
+.report-button {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.report-button:hover {
+    border-color: var(--primary-blue);
+    background: rgba(30, 58, 138, 0.05);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* ============================================
+   FLOTATION CELL VISUAL LAYOUT
+   ============================================ */
+
+.flotation-cell-container {
+    position: relative;
+    width: 100%;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+}
+
+.flotation-cell-image {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.cell-img {
+    width: 100%;
+    max-width: 600px;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.flotation-buttons-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.flotation-button-wrapper {
+    position: absolute;
+    pointer-events: all;
+}
+
+/* Button styling for visual layout */
+.report-button-visual {
+    background: white;
+    border: 2px solid var(--primary-blue);
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: var(--dark-text);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    white-space: nowrap;
+}
+
+.report-button-visual:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Arrow lines connecting buttons to cell parts (using CSS) */
+.arrow-line {
+    position: absolute;
+    background: var(--primary-blue);
+    height: 2px;
+    z-index: -1;
+}
+
+.arrow-line::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+}
+
+/* Feed Arrow - pointing right then down */
+.arrow-feed {
+    width: 300px;
+    right: -270px;
+    top: 60%;
+    transform: translateY(-50%) rotate(5deg);
+}
+
+.arrow-feed::after {
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent var(--primary-blue);
+    right: 0;
+    top: -5px;
+}
+
+/* Reagents Arrow - pointing right */
+.arrow-reagents {
+    width: 275px;
+    right: -250px;
+    top: -110%;
+    transform: translateY(-50%) rotate(-35deg);
+}
+
+.arrow-reagents::after {
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent var(--primary-blue);
+    right: 0;
+    top: -5px;
+}
+
+/* Concentrate Arrow - pointing left */
+.arrow-concentrate {
+    width: 150px;
+    left: -130px;
+    top: 90%;
+    transform: translateY(-50%) rotate(-20deg);
+}
+
+.arrow-concentrate::after {
+    border-width: 6px 10px 6px 0;
+    border-color: transparent var(--primary-blue) transparent transparent;
+    left: 0;
+    top: -5px;
+}
+
+/* Tails Arrow - pointing left and up */
+.arrow-tails {
+    width: 310px;
+    left: -300px;
+    top: -20%;
+    transform: translateY(-50%) rotate(15deg);
+}
+
+.arrow-tails::after {
+    border-width: 6px 10px 6px 0;
+    border-color: transparent var(--primary-blue) transparent transparent;
+    left: 0;
+    top: -5px;
+}
+
+/* Feed - Top Left */
+.feed-position {
+    top: 8%;
+    left: 5%;
+    z-index: 10;
+}
+
+.feed-arrow {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Reagents - Left Middle */
+.reagents-position {
+    top: 40%;
+    left: 5%;
+    z-index: 10;
+}
+
+.reagents-arrow {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Concentrate - Right */
+.concentrate-position {
+    top: 25%;
+    right: 5%;
+    z-index: 10;
+}
+
+.concentrate-arrow {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Tails - Bottom Right */
+.tails-position {
+    bottom: 15%;
+    right: 10%;
+    z-index: 10;
+}
+
+.tails-arrow {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* Mineral Type - Separate section */
+.mineral-type-section {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    /* border-top removed - no line above Mineral Type */
+}
+
+.report-button-mineral {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem 2.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    color: var(--dark-text);
+    box-shadow: var(--shadow-sm);
+}
+
+.report-button-mineral:hover {
+    border-color: var(--primary-blue);
+    background: rgba(30, 58, 138, 0.05);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Responsive adjustments for flotation cell visual */
+@media (max-width: 768px) {
+    .flotation-cell-container {
+        padding: 1rem;
+    }
+    
+    .flotation-button-wrapper {
+        position: static;
+        margin: 0.5rem;
+    }
+    
+    .pointer-line {
+        display: none;
+    }
+    
+    .flotation-buttons-overlay {
+        position: static;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+}
+
+/* Process Parameters Layout */
+.process-parameters-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.parameters-controls {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.parameter-item { /*process parameters - item*/
+    
+    margin-bottom: var(--spacing-lg);
+}  
+
+.parameter-label {
+    font-weight: 600;
+    color: var(--dark-text);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.95rem;
+    display: block;
+}
+
+.parameter-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.param-btn {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--dark-text);
+}
+
+.param-btn:hover {
+    border-color: var(--primary-blue);
+    background: rgba(30, 58, 138, 0.05);
+}
+
+.param-btn.active {
+    border-color: var(--primary-blue);
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+/* Visualization Panel (Bloque 2) */
+.visualization-panel {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+}
+
+.viz-panel-empty {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    color: var(--light-text);
+}
+
+.viz-panel-empty-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.3;
+}
+
+.viz-panel-empty-text {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.viz-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--neutral-gray);
+}
+
+.viz-panel-title {
+    font-weight: 600;
+    color: var(--dark-text);
+    font-size: 1rem;
+}
+
+.viz-panel-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-expand, .btn-add-pdf, .btn-remove-pdf {
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.btn-expand {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.btn-expand:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-add-pdf {
+    background: var(--success-green);
+    color: white;
+}
+
+.btn-add-pdf:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-remove-pdf {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-remove-pdf:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.viz-panel-graph {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Recovery Section */
+.recovery-section {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.recovery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.recovery-title {
+    font-weight: 600;
+    color: var(--dark-text);
+    font-size: 1.1rem;
+}
+
+.recovery-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-view, .btn-add-pdf-recovery {
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-view {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.btn-view:hover {
+    background: #1e40af;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-add-pdf-recovery {
+    background: var(--success-green);
+    color: white;
+}
+
+.btn-add-pdf-recovery:hover {
+    background: #059669;
+}
+
+.btn-remove-pdf-recovery {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+.btn-remove-pdf-recovery:hover {
+    background: #dc2626 !important;
+}
+
+/* Correlation Cards */
+.correlation-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.correlation-card {
+    background: white;
+    border-radius: 12px;
+    padding: var(--spacing-lg);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.correlation-card:hover {
+    border-color: var(--primary-blue);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.correlation-card-icon {
+    font-size: 3rem;
+    padding: 5%;
+    margin-bottom: var(--spacing-md);
+    color: var(--primary-blue);
+}
+
+.correlation-card-title {
+    font-weight: 600;
+    color: var(--dark-text);
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Modal Overlay with Blur Effect */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1040;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Large Modal for Reports/Graphs */
+.large-modal {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    animation: fadeInScale 0.3s ease;
+}
+
+.large-modal-header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.large-modal-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+.large-modal-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.btn-download-modal {
+    padding: 0.6rem 1.5rem;
+    background: var(--success-green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-download-modal:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-close-modal {
+    padding: 0.6rem 1rem;
+    background: transparent;
+    color: var(--dark-text);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.btn-close-modal:hover {
+    background: var(--neutral-gray);
+    border-color: var(--dark-text);
+}
+
+.large-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-lg);
+}
+
+.iframe-container {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    border: none;
+}
+
+.iframe-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 8px;
+}
+
+/* PDF Generate Button */
+.pdf-generate-section {
+    text-align: center;
+    margin-top: var(--spacing-xl);
+    margin-bottom: var(--spacing-xl);
+}
+
+.btn-generate-pdf {
+    background: var(--primary-blue);
+    color: white;
+    border: none;
+    padding: 1rem 3rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-generate-pdf:hover:not(:disabled) {
+    background: #1e40af;
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-generate-pdf:disabled {
+    background: var(--light-text);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.pdf-counter {
+    font-size: 0.9rem;
+    color: white;
+    background: var(--accent-yellow);
+    padding: 0.2rem 0.6rem;
+    border-radius: 12px;
+    margin-left: 0.5rem;
+    font-weight: 700;
+}
+
+/* Configuration Modals (Date selection) */
+.config-modal {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: fadeInScale 0.3s ease;
+}
+
+.config-modal-header {
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.config-modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+.config-modal-body {
+    padding: var(--spacing-xl);
+}
+
+/* Animations */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .process-parameters-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .correlation-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .reports-buttons-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .large-modal {
+        width: 95%;
+        max-height: 95vh;
+    }
+}
